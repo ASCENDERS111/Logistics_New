@@ -148,7 +148,7 @@ def get_fedex_access_token(client_id, client_secret):
     else:
         print(f"Failed to get FedEx access token: {response.status_code}")
         return None
-
+    
 def fetch_fedex_delivery_date(tracking_number, access_token):
     url = "https://apis.fedex.com/track/v1/trackingnumbers"
     headers = {
@@ -164,17 +164,42 @@ def fetch_fedex_delivery_date(tracking_number, access_token):
             }
         ]
     }
+    
     response = requests.post(url, headers=headers, json=data)
+    
     if response.status_code == 200:
         tracking_info = response.json()
+        # print(f"Full response for tracking number {tracking_number}:\n", json.dumps(tracking_info, indent=2))  # Print full response for debugging
+        
         try:
             complete_track_results = tracking_info['output']['completeTrackResults'][0]['trackResults'][0]
+            
+            # Check for estimated delivery date
             estimated_delivery = complete_track_results.get('estimatedDeliveryTimeWindow', {}).get('window', {}).get('ends')
+            
+            # Check for estimated delivery in dateAndTimes
+            if not estimated_delivery:
+                for date_time in complete_track_results.get('dateAndTimes', []):
+                    if date_time.get('type') == 'ESTIMATED_DELIVERY':
+                        estimated_delivery = date_time.get('dateTime')
+                        break
+            
+            # Check for standard transit time window if estimated delivery is not found
+            if not estimated_delivery:
+                estimated_delivery = complete_track_results.get('standardTransitTimeWindow', {}).get('window', {}).get('ends')
+            
+            # Get package count
+            package_count = complete_track_results.get('packageDetails', {}).get('count', '1')
+            
             if estimated_delivery:
-                return estimated_delivery
-            return "Unknown"
-        except KeyError:
+                return f"{estimated_delivery} [{package_count}]"
+            else:
+                return "Unknown"
+        except KeyError as e:
+            # print(f"Unexpected response structure or missing key: {e}")
+            # print(json.dumps(tracking_info, indent=2))  # Print full response for debugging
             return "KeyError"
     else:
-        print(f"Failed to fetch FedEx tracking details: {response.status_code}")
+        print(f"Failed to track shipment: {response.status_code}")
+        print(response.text)
         return "Error"

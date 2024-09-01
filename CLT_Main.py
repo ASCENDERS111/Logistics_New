@@ -2,6 +2,7 @@
 import json
 import gspread
 import pandas as pd
+import re
 import numpy as np
 import requests
 import xml.etree.ElementTree as ET
@@ -171,7 +172,7 @@ def get_delivery_dates(df, client_id, client_secret, ups_client_key, ups_client_
             
             for tracking_number in tracking_numbers:
                 if row['Tracking Courier Details.Courier  API List'] == 'FEDEX':
-                                        delivery_info = fetch_fedex_delivery_date(tracking_number, fedex_access_token)
+                    delivery_info = fetch_fedex_delivery_date(tracking_number, fedex_access_token)
                 elif row['Tracking Courier Details.Courier  API List'] == 'UPS':
                     delivery_info = fetch_ups_delivery_date(tracking_number, ups_access_token)
                 else:
@@ -181,10 +182,43 @@ def get_delivery_dates(df, client_id, client_secret, ups_client_key, ups_client_
                     dates.append(str(delivery_info))
             
             if dates:
-                df.at[index, 'Delivery Date'] = ' | '.join(dates)
+                # Clean and format the dates before adding them to the DataFrame
+                cleaned_dates = convert_dates(' | '.join(dates))
+                df.at[index, 'Delivery Date'] = cleaned_dates
 
     return df
 
+def convert_dates(date_str):
+    if pd.isna(date_str) or date_str == '':
+        return date_str
+    
+    date_count_pairs = date_str.split(' | ')
+    formatted_pairs = []
+    
+    for pair in date_count_pairs:
+        match = re.match(r'(.*)\s*\[(\d+)\]', pair.strip())
+        if match:
+            date, count = match.groups()
+            try:
+                # Remove the time component if it exists and format the date
+                date_only = re.sub(r'T.*', '', date)
+                formatted_date = pd.to_datetime(date_only, errors='raise').date().strftime('%Y-%m-%d')
+                formatted_pairs.append(f"{formatted_date} [{count}]")
+            except ValueError:
+                # If date conversion fails but count is not zero, keep the count
+                if count != '0':
+                    formatted_pairs.append(f"[{count}]")
+        else:
+            try:
+                # Handle dates without brackets
+                date_only = re.sub(r'T.*', '', pair.strip())
+                formatted_date = pd.to_datetime(date_only, errors='raise').date().strftime('%Y-%m-%d')
+                formatted_pairs.append(formatted_date)
+            except ValueError:
+                # If the date is invalid, keep the original string
+                formatted_pairs.append(pair.strip())
+    
+    return ' | '.join(filter(None, formatted_pairs))
 # Step 5: Clear and append data to Google Sheets
 def clear_and_append_to_gsheets(sheet_name, worksheet_name, df, json_credentials_path):
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -241,10 +275,12 @@ if __name__ == "__main__":
         # Get delivery dates for missing rows
         missing_rows_df = get_delivery_dates(missing_rows_df, CLIENT_ID, CLIENT_SECRET, client_key, client_secret)
 
+        # Convert and clean the 'Delivery Date' column in the missing_rows_df DataFrame
+        missing_rows_df['Delivery Date'] = missing_rows_df['Delivery Date'].apply(convert_dates)
+
         # Sort, combine, and replace all rows in Google Sheets
         sort_and_append_to_gsheets(gsheets_df, missing_rows_df, 'Tracking Sheet for Charlotte.xlsx', 'Test_new', 'divine-arcade-406611-e0729e40870d.json')
 
         print("Replaced all rows in Google Sheets with sorted and updated data.")
     else:
         print("No missing rows to append.")
-
