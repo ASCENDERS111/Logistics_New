@@ -1,12 +1,12 @@
 #@author Bijoy krishan
 import json
 import gspread # type: ignore
-import pandas as pd
+import pandas as pd # type: ignore
 import re
-import numpy as np
+import numpy as np # type: ignore
 import requests
 import xml.etree.ElementTree as ET
-from oauth2client.service_account import ServiceAccountCredentials
+from oauth2client.service_account import ServiceAccountCredentials # type: ignore
 from delivery_date_fetcher import (
     get_ups_access_token, 
     fetch_ups_delivery_date, 
@@ -236,9 +236,6 @@ def clear_and_append_to_gsheets(sheet_name, worksheet_name, df, json_credentials
     print(f"Replaced all rows in Google Sheets with {len(df)} rows.")
 
 # Step 6: Sort and append data to Google Sheets
-# ... (previous code remains the same)
-
-# Step 6: Sort and append data to Google Sheets (Updated)
 def sort_and_append_to_gsheets(gsheets_df, missing_rows_df, sheet_name, worksheet_name, json_credentials_path):
     combined_df = pd.concat([gsheets_df, missing_rows_df], ignore_index=True)
 
@@ -246,31 +243,7 @@ def sort_and_append_to_gsheets(gsheets_df, missing_rows_df, sheet_name, workshee
 
     combined_df = combined_df.dropna(subset=['Date tracking Enter'])
 
-    # Sort the DataFrame by 'Date tracking Enter' in ascending order
-    df_sorted = combined_df.sort_values(by='Date tracking Enter', ascending=True)
-
-    # Extract the earliest instance of each unique 'Invoice'
-    earliest_invoices = df_sorted.drop_duplicates(subset='Invoice', keep='first')
-
-    # Extract the remaining rows with 'Invoice' values
-    remaining_invoices = df_sorted[df_sorted.duplicated(subset='Invoice', keep='first')]
-
-    # Create an empty DataFrame to store the final sorted result
-    df_final = pd.DataFrame(columns=combined_df.columns)
-
-    # Append remaining invoices just below their respective earliest invoices
-    for invoice in earliest_invoices['Invoice']:
-        # Append the earliest invoice row
-        df_final = pd.concat([df_final, earliest_invoices[earliest_invoices['Invoice'] == invoice]])
-        # Append the remaining invoice rows
-        df_final = pd.concat([df_final, remaining_invoices[remaining_invoices['Invoice'] == invoice]])
-
-    # Append rows without 'Invoice' values (if needed)
-    df_no_invoices = df_sorted[df_sorted['Invoice'].isna()]
-    df_final = pd.concat([df_final, df_no_invoices])
-
-    # Reset index for the final DataFrame
-    df_final = df_final.reset_index(drop=True)
+    sorted_df = combined_df.sort_values(by='Date tracking Enter', ascending=True)
 
     new_order = [
         'Parent ID', 'SNo', 'Destination Point', "Batch", "Invoice",
@@ -281,11 +254,11 @@ def sort_and_append_to_gsheets(gsheets_df, missing_rows_df, sheet_name, workshee
         "comp", "book", 'Purchase Cost', 'Version Sheet.Destination Point',
         'Tracking Courier Details.Tracking Destination', 'Tracking Courier Details.Courier  API List'
     ]
-    df_final = df_final[new_order]
+    sorted_df = sorted_df[new_order]
 
-    df_final['Date tracking Enter'] = df_final['Date tracking Enter'].astype(str)
+    sorted_df['Date tracking Enter'] = sorted_df['Date tracking Enter'].astype(str)
 
-    clear_and_append_to_gsheets(sheet_name, worksheet_name, df_final, json_credentials_path)
+    clear_and_append_to_gsheets(sheet_name, worksheet_name, sorted_df, json_credentials_path)
 
 # Main script execution
 if __name__ == "__main__":
@@ -299,8 +272,8 @@ if __name__ == "__main__":
     missing_rows_df = identify_missing_rows(zoho_df, gsheets_df)
 
     if not missing_rows_df.empty:
-        # Get delivery dates for missing rows using multithreading
-        missing_rows_df = get_delivery_dates_threaded(missing_rows_df, CLIENT_ID, CLIENT_SECRET, client_key, client_secret)
+        # Get delivery dates for missing rows
+        missing_rows_df = get_delivery_dates(missing_rows_df, CLIENT_ID, CLIENT_SECRET, client_key, client_secret)
 
         # Convert and clean the 'Delivery Date' column in the missing_rows_df DataFrame
         missing_rows_df['Delivery Date'] = missing_rows_df['Delivery Date'].apply(convert_dates)

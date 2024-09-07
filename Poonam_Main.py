@@ -1,12 +1,12 @@
 import requests
-import pandas as pd
+import pandas as pd # type: ignore
 import xml.etree.ElementTree as ET
 import os
-import numpy as np
+import numpy as np # type: ignore
 import json
 from datetime import datetime
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from oauth2client.service_account import ServiceAccountCredentials # type: ignore
 import re
 from delivery_date_fetcher import get_fedex_access_token, fetch_fedex_delivery_date  # Import necessary functions
 import json
