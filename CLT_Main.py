@@ -79,6 +79,8 @@ def fetch_data_from_zoho():
         # Add necessary columns with default values
         df[['Pic', 'Item Pics', 'Weight_LBS', 'Dimensions_Inches', 'Remark by Robert', 'Remark by Logistic team', 'Delivery Date','book','comp']] = None
         df['SNo'] = df['SNo'].astype(int)
+        
+        # df['Batch']=df['ECCN']+'-'+df['ECCN Other'].astype(str)
         df['Purchase Cost'] = df['Purchase Cost'].astype(float)
         df['Pic'] = df['Purchase Cost'].apply(lambda x: 'Yes' if pd.isna(x) or x > 250 else 'No')
         df['Item Pics'] = df['Purchase Cost'].apply(lambda x: 'Yes' if pd.isna(x) or x > 1000 else 'No')
@@ -98,7 +100,7 @@ def fetch_data_from_zoho():
 
         # Reorder columns as needed
         ordered_columns = [
-            'Parent ID', 'SNo', 'Destination Point', 'Batch', 'Invoice', 
+            'Parent ID', 'SNo', 'Destination Point', 'Batch','ECCN' ,'Invoice', 
             'Version Sheet.Order Payment Received Status', 'Stage_new', 'Date tracking Enter',
             'Supplier Name', 'Supplier (Grainger / Non-Grainger)', 'Version Sheet.Placed the Order with Supplier',
             'Tracking Number', 'Delivery Date', 'Pic', 'Item Pics', 'QTY', 
@@ -246,7 +248,7 @@ def sort_and_append_to_gsheets(gsheets_df, missing_rows_df, sheet_name, workshee
     sorted_df = combined_df.sort_values(by='Date tracking Enter', ascending=True)
 
     new_order = [
-        'Parent ID', 'SNo', 'Destination Point', "Batch", "Invoice",
+        'Parent ID', 'SNo', 'Destination Point', "Batch",'ECCN', "Invoice",
         'Version Sheet.Order Payment Received Status', 'Stage_new', 'Date tracking Enter',
         'Supplier Name', 'Supplier (Grainger / Non-Grainger)', 'Version Sheet.Placed the Order with Supplier',
         'Tracking Number', 'Delivery Date', 'Pic', 'Item Pics', 'QTY',

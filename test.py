@@ -80,6 +80,8 @@ def fetch_data_from_zoho():
         # Add necessary columns with default values
         df[['Pic', 'Item Pics', 'Weight_LBS', 'Dimensions_Inches', 'Remark by Robert', 'Remark by Logistic team', 'Delivery Date','book','comp']] = None
         df['SNo'] = df['SNo'].astype(int)
+        df['Batch']=df['ECCN']+'-'+df['ECCN Other'].astype(str)
+
         df['Purchase Cost'] = df['Purchase Cost'].astype(float)
         df['Pic'] = df['Purchase Cost'].apply(lambda x: 'Yes' if pd.isna(x) or x > 250 else 'No')
         df['Item Pics'] = df['Purchase Cost'].apply(lambda x: 'Yes' if pd.isna(x) or x > 1000 else 'No')
