@@ -4,7 +4,7 @@ import gspread # type: ignore
 import pandas as pd # type: ignore
 import re
 import numpy as np # type: ignore
-import requests
+import requests # type: ignore
 import xml.etree.ElementTree as ET
 from oauth2client.service_account import ServiceAccountCredentials # type: ignore
 from delivery_date_fetcher import (

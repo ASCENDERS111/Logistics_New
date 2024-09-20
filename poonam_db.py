@@ -75,7 +75,7 @@ def fetch_and_process_data_from_zoho():
         print(f"Failed to obtain token. Status code: {response.status_code}")
         return None
 
-    url = "https://analyticsapi.zoho.com/api/ashutosh@raptorsupplies.com/Zoho%20CRM%20Analytics/Logistic 2?ZOHO_ACTION=EXPORT&ZOHO_OUTPUT_FORMAT=XML&ZOHO_ERROR_FORMAT=XML&ZOHO_API_VERSION=1.0"
+    url = "https://analyticsapi.zoho.com/api/ashutosh@raptorsupplies.com/Zoho%20CRM%20Analytics/Poonam?ZOHO_ACTION=EXPORT&ZOHO_OUTPUT_FORMAT=XML&ZOHO_ERROR_FORMAT=XML&ZOHO_API_VERSION=1.0"
     headers = {"Authorization": f"Zoho-oauthtoken {access_token}"}
 
     response = requests.get(url, headers=headers)
@@ -91,10 +91,9 @@ def fetch_and_process_data_from_zoho():
         rows_data.append(row_data)
 
     df_final = pd.DataFrame(rows_data)
-    df_final['Stage_new'] = df_final['Version Sheet.Stage'] + '--' + df_final['Version Sheet.Payment Method']
-    df_final['Destination Point']=df_final['Version Sheet.Destination Point']+'-'+df_final['EUC Upload']
+
     # Keep only the necessary columns
-    # df_final = df_final[['Parent ID', 'Stage']]
+    df_final = df_final[['Parent ID', 'Stage']]
     return df_final
 
 # Function to update the Google Sheets worksheet with the modified DataFrame
@@ -107,14 +106,7 @@ def update_sheet_with_modified_data(df, df_final):
         parent_id = row['Parent ID']
         if parent_id in parent_id_to_index_final:
             df_final_index = parent_id_to_index_final[parent_id]
-            # df.at[index, 'Stage'] = df_final.iloc[df_final_index]['Stage']
-            df.at[index, 'Stage_new'] = df_final.iloc[df_final_index]['Stage_new']
-            df.at[index, 'ECCN'] = df_final.iloc[df_final_index]['ECCN']
-
-            df.at[index, 'Tracking Number'] = df_final.iloc[df_final_index]['Tracking Number']
-            df.at[index, 'Destination Point'] = df_final.iloc[df_final_index]['Destination Point']
-            df.at[index, 'Version Sheet.Order Payment Received Status'] = df_final.iloc[df_final_index]['Version Sheet.Order Payment Received Status']
-
+            df.at[index, 'Stage'] = df_final.iloc[df_final_index]['Stage']
 
     return df
 
@@ -184,57 +176,18 @@ def create_or_update_worksheet(df, sheet_name, worksheet_name, json_credentials_
 # Function to append data containing 'Track 2' or 'Track 3' in 'Stage' to a new sheet and delete from original sheet
 
 
-def fetch_worksheet_to_dataframe(sheet_name, worksheet_name, json_credentials_path):
-    try:
-        # Authenticate and get the Google Sheets client
-        client = authenticate_google_sheets(json_credentials_path)
-        print("Authenticated successfully")
-
-        # Open the existing Google Sheet by name
-        sheet = client.open(sheet_name)
-        print(f"Opened Google Sheet: {sheet_name}")
-
-        # Get the worksheet by name
-        worksheet = sheet.worksheet(worksheet_name)
-        print(f"Accessing worksheet: {worksheet_name}")
-
-        # Fetch all data from the worksheet
-        data = worksheet.get_all_values()
-        print(f"Fetched data from worksheet: {data[:5]}")  # Print first 5 rows for debugging
-
-        # Check if data is not empty
-        if not data:
-            print("No data found in the worksheet")
-            return None, None, None
-
-        # Convert the data to a DataFrame
-        df = pd.DataFrame(data[1:], columns=data[0])
-        print(f"Converted data to DataFrame: {df.head()}")
-
-        return df, worksheet, sheet
-
-    except gspread.exceptions.APIError as api_error:
-        print(f"Google Sheets API error: {api_error}")
-        return None, None, None
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return None, None, None
-
-# Function to append data containing 'Track 2' or 'Track 3' in 'Stage_new' to a new sheet and delete from original sheet
-# Function to append data containing 'Track 2' or 'Track 3' in 'Stage_new' to a new sheet and delete from the original sheet
-# Function to append data containing 'Track 2' or 'Track 3' in 'Stage_new' to a new sheet and delete from the original sheet
 def append_and_delete_track_data(df, worksheet, sheet, new_sheet_name):
     try:
-        # Filter rows containing 'Track 2' or 'Track 3' in 'Stage_new'
-        filtered_df = df[df['Stage_new'].str.contains('TRACK 2|TRACK 3|CLOSED', na=False)]
+        # Filter rows containing 'CLOSED' in 'Stage'
+        filtered_df = df[df['Stage'].str.contains('CLOSED', na=False)]
         print(f"Filtered data: {filtered_df.head()}")
 
         if filtered_df.empty:
             print("No matching data found to append.")
             return
 
-        # Convert the filtered DataFrame to a list of lists (to match the column count)
-        filtered_data = filtered_df.values.tolist()
+        # Convert the filtered DataFrame to a list of lists
+        filtered_data = [filtered_df.columns.values.tolist()] + filtered_df.values.tolist()
 
         # Check if the new sheet already exists
         try:
@@ -244,31 +197,21 @@ def append_and_delete_track_data(df, worksheet, sheet, new_sheet_name):
             new_sheet = sheet.add_worksheet(title=new_sheet_name, rows="1000", cols="20")
             print(f"Created new worksheet: {new_sheet_name}")
 
-        # Find the first empty row in the new sheet (using only columns with data)
+        # Find the first empty row in the new sheet
         existing_data = new_sheet.get_all_values()
-        if not existing_data:  # If the sheet is empty, start from the first row
-            start_row = 1
-        else:
-            start_row = len(existing_data) + 1
-
-        # Find the starting column (if required)
-        num_existing_columns = len(existing_data[0]) if existing_data else len(filtered_df.columns)
-        
-        # Pad each row with empty columns if necessary to ensure alignment
-        for row in filtered_data:
-            while len(row) < num_existing_columns:
-                row.append('')
+        start_row = len(existing_data) + 1
 
         # Append the filtered data to the new sheet
-        new_sheet.append_rows(filtered_data, value_input_option='RAW', table_range=f"A{start_row}")
+        new_sheet.append_rows(filtered_data[1:], value_input_option='RAW')
         print("Data appended successfully")
 
-        # Format the appended rows with a blue background
-        format_range = f'A{start_row}:U{start_row + len(filtered_data) - 1}'
+        # Format the appended rows with a light blue background
+        format_range = f'A{start_row}:U{start_row + len(filtered_data) - 2}'  # Adjust columns if necessary
         fmt = CellFormat(
             backgroundColor=Color(0.678, 0.847, 0.902)  # Light blue color
         )
         format_cell_range(new_sheet, format_range, fmt)
+        print(f"Formatted rows {start_row} to {start_row + len(filtered_data) - 2} with light blue background")
 
         # Delete rows from the original sheet
         indices_to_delete = filtered_df.index + 2  # +2 to account for header and 0-based index
@@ -287,9 +230,9 @@ if __name__ == "__main__":
     json_credentials_path = 'divine-arcade-406611-e0729e40870d.json'
 
     # Google Sheet and worksheet names
-    sheet_name = 'Tracking Sheet for Charlotte.xlsx'
-    worksheet_name = 'Test_new'
-    new_sheet_name = 'Test_DB'
+    sheet_name = 'Poonam incoming shipments'
+    worksheet_name = 'TestNew'
+    new_sheet_name = 'TestDB'
 
     # Fetch data from Google Sheets
     df_google_sheets, worksheet, sheet = fetch_all_data_from_google_sheets(sheet_name, worksheet_name, json_credentials_path)

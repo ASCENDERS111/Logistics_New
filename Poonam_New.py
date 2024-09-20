@@ -281,7 +281,7 @@ def convert_dates(date_str):
     return ' | '.join(filter(None, formatted_pairs))
 
 # Final step: Apply the date conversion to the DataFrame
-df_final['Delivery Date'] = df_final['Delivery Date'].apply(convert_dates)
+df_final['Delivery Date'] = df_final['Delivery Date'].apply(convert_dates) # type: ignore
 
 # Example usage in the main script
 if __name__ == "__main__":
@@ -296,5 +296,5 @@ if __name__ == "__main__":
     worksheet_name = 'TestNew'
 
     # Upload the DataFrame to the worksheet in the existing Google Sheet
-    create_or_update_worksheet(df_final, sheet_name, worksheet_name, json_credentials_path)
+    create_or_update_worksheet(df_final, sheet_name, worksheet_name, json_credentials_path) # type: ignore
     print("Process completed")
