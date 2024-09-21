@@ -92,6 +92,7 @@ def fetch_and_process_data_from_zoho():
 
     df_final = pd.DataFrame(rows_data)
     df_final['Stage_new'] = df_final['Version Sheet.Stage'] + '--' + df_final['Version Sheet.Payment Method']
+    df_final['EUC Upload'] = df_final['EUC Upload'].map({'Yes': 'EucUploaded', 'No': ''})
     df_final['Destination Point']=df_final['Version Sheet.Destination Point']+'-'+df_final['EUC Upload']
     # Keep only the necessary columns
     # df_final = df_final[['Parent ID', 'Stage']]
