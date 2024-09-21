@@ -12,4 +12,8 @@ time.sleep(1)
 print("Running Poonam_Main.py...")
 subprocess.run(["python", "Poonam_Main.py"])
 
-print("Both scripts have finished running.")
+# Run gg.py
+print("Running krati..Script...")
+subprocess.run(["python", "krati.py"])
+
+print("All scripts have finished running.")

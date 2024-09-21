@@ -1,13 +1,13 @@
-import requests
+import requests # type: ignore
 import xml.etree.ElementTree as ET
 import pandas as pd
 import numpy as np
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import gspread # type: ignore
+from oauth2client.service_account import ServiceAccountCredentials # type: ignore
 import time
 import json
 import time
-from gspread_formatting import format_cell_range, CellFormat, Color
+from gspread_formatting import format_cell_range, CellFormat, Color # type: ignore
 with open('credentials.json') as f:
     credentials = json.load(f)
 
