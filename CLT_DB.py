@@ -288,8 +288,8 @@ if __name__ == "__main__":
 
     # Google Sheet and worksheet names
     sheet_name = 'Tracking Sheet for Charlotte.xlsx'
-    worksheet_name = 'Test_new'
-    new_sheet_name = 'Test_DB'
+    worksheet_name = 'Automation_New'
+    new_sheet_name = 'Automation_DB'
 
     # Fetch data from Google Sheets
     df_google_sheets, worksheet, sheet = fetch_all_data_from_google_sheets(sheet_name, worksheet_name, json_credentials_path)

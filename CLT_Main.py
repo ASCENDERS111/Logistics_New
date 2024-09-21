@@ -268,7 +268,7 @@ if __name__ == "__main__":
     zoho_df = fetch_data_from_zoho()
 
     # Fetch data from Google Sheets
-    gsheets_df = fetch_data_from_gsheets('Tracking Sheet for Charlotte.xlsx', 'Test_new', 'divine-arcade-406611-e0729e40870d.json')
+    gsheets_df = fetch_data_from_gsheets('Tracking Sheet for Charlotte.xlsx', 'Automation_New', 'divine-arcade-406611-e0729e40870d.json')
 
     # Identify missing rows 
     missing_rows_df = identify_missing_rows(zoho_df, gsheets_df)
@@ -281,7 +281,7 @@ if __name__ == "__main__":
         missing_rows_df['Delivery Date'] = missing_rows_df['Delivery Date'].apply(convert_dates)
 
         # Sort, combine, and replace all rows in Google Sheets
-        sort_and_append_to_gsheets(gsheets_df, missing_rows_df, 'Tracking Sheet for Charlotte.xlsx', 'Test_new', 'divine-arcade-406611-e0729e40870d.json')
+        sort_and_append_to_gsheets(gsheets_df, missing_rows_df, 'Tracking Sheet for Charlotte.xlsx', 'Automation_New', 'divine-arcade-406611-e0729e40870d.json')
 
         print("Replaced all rows in Google Sheets with sorted and updated data.")
     else:

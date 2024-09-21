@@ -255,7 +255,7 @@ if __name__ == "__main__":
     # Step 3: Authenticate and fetch Google Sheets data
     json_credentials_path = 'divine-arcade-406611-e0729e40870d.json'
     sheet_name = 'Poonam incoming shipments'
-    worksheet_name = 'TestNew'
+    worksheet_name = 'Automation_New'
     df_gsheet = fetch_google_sheets_data(sheet_name, worksheet_name, json_credentials_path)
 
     # Step 4: Filter new entries by comparing Zoho and Google Sheets data

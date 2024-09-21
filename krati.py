@@ -283,6 +283,7 @@ if __name__ == "__main__":
     new_order = [
         'Parent ID',
         'Date tracking Enter',
+        'Urgent'
         'Batch Number',
         'Invoice',
         'Stage',
