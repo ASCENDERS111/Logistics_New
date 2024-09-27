@@ -69,7 +69,7 @@ def fetch_zoho_data(access_token):
 def preprocess_dataframe(df):
     df.loc[df['Stage'].isin(['TRACK 2', 'TRACK 3']), 'Supplier Name'] = 'CLT'
     df = df[df['Stage'] != 'ORDER CLOSED']
-    df.loc[:, ['Krati QTY', 'Weight_LBS', 'Dimensions_Inches', 'Remark by Krati', 'Remark by Logistic team', 'Delivery Date', 'Book']] = ''
+    df.loc[:, ['Krati QTY', 'Weight_Kg', 'Dimensions_CMs', 'Remark by Krati', 'Remark by Logistic team', 'Delivery Date', 'Book']] = ''
     cols = list(df.columns)
     tracking_index = cols.index('Tracking Number')
     cols.insert(tracking_index + 1, cols.pop(cols.index('Delivery Date')))
@@ -293,8 +293,8 @@ if __name__ == "__main__":
         'Item',
         'Raptor QTY',
         'Krati QTY',
-        'Weight_LBS',
-        'Dimensions_Inches',
+        'Weight_Kg',
+        'Dimensions_CMs',
         'Remark by Logistic team',
         'Remark by Krati',
         'Book',
