@@ -149,7 +149,7 @@ def create_or_update_worksheet(df, sheet_name, worksheet_name, json_credentials_
 
         # Handle out of range float values (e.g., NaNs or infinite values)
         df = df.replace([np.inf, -np.inf], np.nan).fillna('')
-        df = df.applymap(str)  # Convert all values to strings to avoid JSON serialization issues
+        df = df.astype(str)  # Convert all values to strings to avoid JSON serialization issues
 
         # Convert DataFrame to list of lists
         df_list = df.values.tolist()
@@ -174,7 +174,8 @@ def create_or_update_worksheet(df, sheet_name, worksheet_name, json_credentials_
             end_column_letter = col_idx_to_letter(max_columns)
             cell_range = f'A{start_row}:{end_column_letter}{end_row}'
             print(f"Updating worksheet with chunk starting at {cell_range}...")
-            worksheet.update(cell_range, chunk)
+            worksheet.update(range_name=cell_range, values=chunk)
+
             print(f"Updated worksheet with chunk starting at {cell_range}")
 
     except gspread.exceptions.APIError as api_error:
