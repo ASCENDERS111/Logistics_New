@@ -10,6 +10,10 @@ from oauth2client.service_account import ServiceAccountCredentials # type: ignor
 import re
 from delivery_date_fetcher import get_fedex_access_token, fetch_fedex_delivery_date  # Import necessary functions
 import json
+import warnings
+
+# Suppress all warnings
+warnings.filterwarnings("ignore")
 
 # Function to load credentials from a JSON file
 def load_credentials(filepath='credentials.json'):
@@ -78,6 +82,8 @@ def preprocess_dataframe(df):
     df['Urgent'] = df['Urgent'].map({'Urgent Shipment - Logistics':'Urgent','Urgent Shipment - OP':'Urgent'})
 
     df['Date tracking Enter'] = pd.to_datetime(df['Date tracking Enter'], errors='coerce')
+    # df['Date tracking Enter'] = pd.to_datetime(df['Date tracking Enter'], errors='coerce', format='%Y-%m-%d %H:%M:%S')
+
 
 
     # Sort and extract the earliest instance of each unique 'Invoice'

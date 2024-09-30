@@ -11,6 +11,7 @@ time.sleep(1)
 # Run gg.py
 print("Running Poonam_Main.py...")
 subprocess.run(["python", "Poonam_Main.py"])
+time.sleep(5)
 
 # Run gg.py
 print("Running krati..Script...")
