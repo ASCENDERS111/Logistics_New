@@ -7,6 +7,7 @@ from oauth2client.service_account import ServiceAccountCredentials # type: ignor
 import time
 import json
 import time
+from datetime import datetime
 from gspread_formatting import format_cell_range, CellFormat, Color # type: ignore
 with open('credentials.json') as f:
     credentials = json.load(f)
@@ -61,7 +62,28 @@ def fetch_all_data_from_google_sheets(sheet_name, worksheet_name, json_credentia
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return None, None, None
+def Date_time(df):
+    today = datetime.today()  # Current date as datetime object
+    
+    # Find rows where 'Date_of_Dims' is empty and 'Dimensions_Inches' is not empty
+    mask = (df['Date_of_Dims'] == '') & (df['Dimensions_Inches'] != '')
+    
+    # Replace empty 'Date_of_Dims' with today's date where 'Dimensions_Inches' is not empty
+    df.loc[mask, 'Date_of_Dims'] = today.strftime('%Y-%m-%d')
+    
+    # Convert 'Date_of_Dims' to datetime, but keep empty strings as is
+    df['Date_of_Dims'] = pd.to_datetime(df['Date_of_Dims'], errors='coerce').fillna(df['Date_of_Dims'])
+    
+    # Calculate the difference in days between today and 'Date_of_Dims'
+    # Only calculate for rows where 'Date_of_Dims' is not an empty string
+    df['comp'] = np.where(df['Date_of_Dims'] != '', 
+                          (today - pd.to_datetime(df['Date_of_Dims'], errors='coerce')).dt.days, 
+                          np.nan)
+    
+    return df
 
+# # Apply the function to your DataFrame
+# df = Date_time(df)
 # Function to fetch and process data from Zoho Analytics
 def fetch_and_process_data_from_zoho():
     token_url = "https://accounts.zoho.com/oauth/v2/token"
@@ -235,8 +257,18 @@ def append_and_delete_track_data(df, worksheet, sheet, new_sheet_name):
             print("No matching data found to append.")
             return
 
-        # Convert the filtered DataFrame to a list of lists (to match the column count)
-        filtered_data = filtered_df.values.tolist()
+        # Convert DataFrame to list of lists, handling 'Date_of_Dims' specially
+        filtered_data = []
+        for _, row in filtered_df.iterrows():
+            row_data = []
+            for value in row:
+                if pd.isna(value):
+                    row_data.append('')
+                elif isinstance(value, pd._libs.tslibs.nattype.NaTType):
+                    row_data.append('')
+                else:
+                    row_data.append(str(value))
+            filtered_data.append(row_data)
 
         # Check if the new sheet already exists
         try:
@@ -246,7 +278,7 @@ def append_and_delete_track_data(df, worksheet, sheet, new_sheet_name):
             new_sheet = sheet.add_worksheet(title=new_sheet_name, rows="1000", cols="20")
             print(f"Created new worksheet: {new_sheet_name}")
 
-        # Find the first empty row in the new sheet (using only columns with data)
+        # Find the first empty row in the new sheet
         existing_data = new_sheet.get_all_values()
         if not existing_data:  # If the sheet is empty, start from the first row
             start_row = 1
@@ -283,6 +315,8 @@ def append_and_delete_track_data(df, worksheet, sheet, new_sheet_name):
         print(f"An unexpected error occurred while appending and deleting data: {e}")
 
 
+
+
 # Example usage
 if __name__ == "__main__":
     # Path to the JSON credentials file
@@ -297,6 +331,10 @@ if __name__ == "__main__":
     df_google_sheets, worksheet, sheet = fetch_all_data_from_google_sheets(sheet_name, worksheet_name, json_credentials_path)
     if df_google_sheets is not None:
         print("Fetched Google Sheets data")
+        
+        # Apply Date_time function to the fetched data
+        df_google_sheets = Date_time(df_google_sheets)
+        print("Applied Date_time function to the data")
 
     # Fetch processed data from Zoho Analytics
     df_final = fetch_and_process_data_from_zoho()
@@ -313,3 +351,6 @@ if __name__ == "__main__":
     append_and_delete_track_data(updated_df, worksheet, sheet, new_sheet_name)
 
     print("Process completed")
+
+
+

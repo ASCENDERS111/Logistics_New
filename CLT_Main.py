@@ -77,7 +77,7 @@ def fetch_data_from_zoho():
         df = df[~df['Tracking Courier Details.Tracking Destination'].isin(['Track 3', 'Track 2'])]
 
         # Add necessary columns with default values
-        df[['Pic', 'Item Pics', 'Weight_LBS', 'Dimensions_Inches', 'Remark by Robert', 'Remark by Logistic team', 'Delivery Date','book','comp']] = None
+        df[['Pic', 'Item Pics', 'Weight_LBS', 'Dimensions_Inches', 'Remark by Robert', 'Remark by Logistic team', 'Delivery Date','book','comp','Date_of_Dims']] = None
         df['SNo'] = df['SNo'].astype(int)
         
         # df['Batch']=df['ECCN']+'-'+df['ECCN Other'].astype(str)
@@ -106,7 +106,7 @@ def fetch_data_from_zoho():
             'Tracking Number', 'Delivery Date', 'Pic', 'Item Pics', 'QTY', 
             'Weight_LBS', 'Dimensions_Inches', 'Remark by Robert', 'Remark by Logistic team',
             'comp', 'book', 'Purchase Cost', 'Version Sheet.Destination Point', 
-            'Tracking Courier Details.Tracking Destination', 'Tracking Courier Details.Courier  API List'
+            'Tracking Courier Details.Tracking Destination', 'Tracking Courier Details.Courier  API List','Date_of_Dims'
         ]
         df = df.reindex(columns=ordered_columns, fill_value=None)
         print(f"Fetched {len(df)} rows from Zoho.")
@@ -254,7 +254,7 @@ def sort_and_append_to_gsheets(gsheets_df, missing_rows_df, sheet_name, workshee
         'Tracking Number', 'Delivery Date', 'Pic', 'Item Pics', 'QTY',
         'Weight_LBS', 'Dimensions_Inches', 'Remark by Robert', 'Remark by Logistic team',
         "comp", "book", 'Purchase Cost', 'Version Sheet.Destination Point',
-        'Tracking Courier Details.Tracking Destination', 'Tracking Courier Details.Courier  API List'
+        'Tracking Courier Details.Tracking Destination', 'Tracking Courier Details.Courier  API List','Date_of_Dims'
     ]
     sorted_df = sorted_df[new_order]
 
