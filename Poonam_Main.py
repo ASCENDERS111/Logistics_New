@@ -125,7 +125,9 @@ def fetch_delivery_dates(df, fedex_access_token):
     delivery_dates = []
     for index, row in df.iterrows():
         tracking_number = row['Tracking Number']
-        if ';' in tracking_number:
+        if pd.isna(tracking_number):  # Check for NaN or None values
+            delivery_dates.append("No tracking number")
+        elif isinstance(tracking_number, str) and ';' in tracking_number:
             tracking_numbers = tracking_number.split(';')
             dates = []
             for tn in tracking_numbers:
@@ -136,12 +138,14 @@ def fetch_delivery_dates(df, fedex_access_token):
                 except Exception as e:
                     dates.append(f"Error: {str(e)}")
             delivery_dates.append(';'.join(dates))
-        else:
+        elif isinstance(tracking_number, str):
             try:
                 delivery_info = fetch_fedex_delivery_date(tracking_number.strip(), fedex_access_token)
                 delivery_dates.append(delivery_info if delivery_info else "No data")
             except Exception as e:
                 delivery_dates.append(f"Error: {str(e)}")
+        else:
+            delivery_dates.append("Invalid tracking number")
     df['Delivery Date'] = delivery_dates
 
 # Function to convert and clean up delivery dates
